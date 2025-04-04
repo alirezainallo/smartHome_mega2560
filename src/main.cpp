@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
-// #define bilink_pin 7 //PB7
-uint32_t bilink_pin = 3;
+#define bilink_pin 13 //PB7
+
 void blink_loop(uint32_t ms);
 
 void setup() {
@@ -16,16 +16,6 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   blink_loop(500);
-  if(Serial.available()){
-    delay(100);
-    while (Serial.available()){
-      Serial.read();
-    }
-    
-    bilink_pin++;
-    Serial.print(bilink_pin);
-    pinMode(bilink_pin, OUTPUT);
-  }
 }
 
 // put function definitions here:
@@ -38,6 +28,5 @@ void blink_loop(uint32_t ms){
     nextTick = currTick + ms;
     digitalWrite(bilink_pin, currStat);
     currStat = !currStat;
-    // Serial.println(".");
   }
 }
