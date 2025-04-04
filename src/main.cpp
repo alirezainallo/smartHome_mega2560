@@ -1,11 +1,13 @@
 #include <Arduino.h>
 #include <LiquidCrystal_I2C.h>
 #include <Wire.h>
+#include <TM1637Display.h>
 
 #define bilink_pin 13 //PB7
 void blink_loop(uint32_t ms);
 LiquidCrystal_I2C lcd(0x27,  20, 4);
-
+TM1637Display disp7seg(11 /*DIO*/, 12 /*CLK*/);
+uint8_t data_7seg[] = {0xff, 0xff, 0xff, 0xff};
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
@@ -22,6 +24,10 @@ void setup() {
   delay(2000);
   lcd.clear();
 
+  data_7seg[0]= disp7seg.encodeDigit(15);
+  disp7seg.setSegments(data_7seg);
+  disp7seg.setBrightness(7,true);
+  // disp7seg.showNumberDec(1234);
 }
 
 void loop() {
