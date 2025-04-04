@@ -1,8 +1,10 @@
 #include <Arduino.h>
+#include <LiquidCrystal_I2C.h>
+#include <Wire.h>
 
 #define bilink_pin 13 //PB7
-
 void blink_loop(uint32_t ms);
+LiquidCrystal_I2C lcd(0x27,  20, 4);
 
 void setup() {
   // put your setup code here, to run once:
@@ -11,6 +13,15 @@ void setup() {
   
   pinMode(bilink_pin, OUTPUT);
   Serial.print(bilink_pin);
+
+  lcd.init();
+  lcd.backlight();
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Hello dear");
+  delay(2000);
+  lcd.clear();
+
 }
 
 void loop() {
