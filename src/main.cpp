@@ -8,6 +8,8 @@ void blink_loop(uint32_t ms);
 LiquidCrystal_I2C lcd(0x27,  20, 4);
 TM1637Display disp7seg(11 /*DIO*/, 12 /*CLK*/);
 uint8_t data_7seg[] = {0xff, 0xff, 0xff, 0xff};
+void sevSeg_printClock(uint8_t h, uint8_t m);
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
@@ -24,10 +26,9 @@ void setup() {
   delay(2000);
   lcd.clear();
 
-  data_7seg[0]= disp7seg.encodeDigit(15);
-  disp7seg.setSegments(data_7seg);
   disp7seg.setBrightness(7,true);
-  // disp7seg.showNumberDec(1234);
+  // disp7seg.showNumberDecEx(1234);
+  sevSeg_printClock(11, 57);
 }
 
 void loop() {
@@ -36,6 +37,26 @@ void loop() {
 }
 
 // put function definitions here:
+uint8_t sevSeg_buf[4] = {0};
+void sevSeg_printClock(uint8_t h, uint8_t m){
+  // sevSeg_num = h * 100 + m;
+  // disp7seg.showNumberDecEx(sevSeg_num, true, true);
+
+  sevSeg_buf[0] = h/10;
+  sevSeg_buf[1] = h%10;
+  sevSeg_buf[2] = m/10;
+  sevSeg_buf[3] = m%10;
+  bool isBefore = 1;
+  for(uint8_t i = 0; i < 4; i++){
+    if(sevSeg_buf[i] == 0 && isBefore){
+      sevSeg_buf[i] = 0;
+    }else{
+      sevSeg_buf[i] = disp7seg.encodeDigit(sevSeg_buf[i]);
+      isBefore = 0;
+    }
+  }
+  disp7seg.setSegments(sevSeg_buf, 4, 0);
+}
 void blink_loop(uint32_t ms){
   static uint32_t currTick = 0;
   static uint32_t nextTick = 0;
@@ -45,5 +66,12 @@ void blink_loop(uint32_t ms){
     nextTick = currTick + ms;
     digitalWrite(bilink_pin, currStat);
     currStat = !currStat;
+    
+    if(currStat){
+      sevSeg_buf[1] &= ~(1<<7);
+    }else{
+      sevSeg_buf[1] |=  (1<<7);
+    }
+    disp7seg.setSegments(sevSeg_buf, 4, 0);
   }
 }
