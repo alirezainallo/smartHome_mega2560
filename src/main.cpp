@@ -3,6 +3,13 @@
 #include <Wire.h>
 #include <TM1637Display.h>
 #include <Keypad.h>
+#include <Adafruit_Sensor.h>
+#include <DHT.h>
+#include <DHT_U.h>
+
+#define DHTPIN  14
+#define DHTTYPE DHT11
+DHT_Unified dht(DHTPIN, DHTTYPE);
 
 const byte ROWS = 4; 
 const byte COLS = 4; 
@@ -43,6 +50,8 @@ void setup() {
   disp7seg.setBrightness(7,true);
   // disp7seg.showNumberDecEx(1234);
   sevSeg_printClock(11, 57);
+
+  dht.begin();
 }
 
 void loop() {
@@ -83,14 +92,39 @@ void blink_loop(uint32_t ms){
   currTick = millis();
   if(nextTick < currTick){
     nextTick = currTick + ms;
+    
+    // blink
     digitalWrite(bilink_pin, currStat);
     currStat = !currStat;
     
+    // 7 seg dot
     if(currStat){
       sevSeg_buf[1] &= ~(1<<7);
     }else{
       sevSeg_buf[1] |=  (1<<7);
     }
     disp7seg.setSegments(sevSeg_buf, 4, 0);
+
+    // dht11
+    sensors_event_t event;
+    dht.temperature().getEvent(&event);
+    if (isnan(event.temperature)) {
+      Serial.println(F("Error reading temperature!"));
+    }
+    else {
+      Serial.print(F("Temperature: "));
+      Serial.print(event.temperature);
+      Serial.println(F("°C"));
+    }
+    // Get humidity event and print its value.
+    dht.humidity().getEvent(&event);
+    if (isnan(event.relative_humidity)) {
+      Serial.println(F("Error reading humidity!"));
+    }
+    else {
+      Serial.print(F("Humidity: "));
+      Serial.print(event.relative_humidity);
+      Serial.println(F("%"));
+    }
   }
 }
