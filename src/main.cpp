@@ -50,6 +50,7 @@ typedef enum menu_tag{
   menu_open,
   menu_cannot_open,
   menu_locking,
+  menu_rtc,
 }menu_t;
 menu_t gMenu = menu_idle;
 
@@ -361,6 +362,8 @@ void lcd_initPage(menu_t m){
     lcd.print("                    ");
     lcd.setCursor(0,1);
     lcd.print("                    ");
+    lcd.setCursor(0,2);
+    lcd.print("                    ");
 
     lcd.setCursor(2,0);
     lcd.print("Enter your pass");
@@ -373,6 +376,8 @@ void lcd_initPage(menu_t m){
     lcd.print("                    ");
     lcd.setCursor(0,1);
     lcd.print("                    ");
+    lcd.setCursor(0,2);
+    lcd.print("                    ");
     lcd.setCursor(2,1);
     lcd.print("pass was correct");
     doorServo.write(90);
@@ -382,6 +387,8 @@ void lcd_initPage(menu_t m){
     lcd.setCursor(0,0);
     lcd.print("                    ");
     lcd.setCursor(0,1);
+    lcd.print("                    ");
+    lcd.setCursor(0,2);
     lcd.print("                    ");
     lcd.setCursor(1,1);
     lcd.print("pass was incorrect");
@@ -393,8 +400,20 @@ void lcd_initPage(menu_t m){
     lcd.print("                    ");
     lcd.setCursor(0,1);
     lcd.print("                    ");
+    lcd.setCursor(0,2);
+    lcd.print("                    ");
     lcd.setCursor(5,1);
     lcd.print("Locking...");
+    break;
+  case menu_rtc:
+    lcd.setCursor(0,0);
+    lcd.print("                    ");
+    lcd.setCursor(0,1);
+    lcd.print("                    ");
+    lcd.setCursor(0,2);
+    lcd.print("                    ");
+    lcd.setCursor(5,0);
+    lcd.print("Set time:");
     break;
   default:
     break;
@@ -411,43 +430,58 @@ void keypad_process(void){
     {
     case 'A':
       // clear
-      kNum = 0;
-      lcd.setCursor(0,1);
-      lcd.print("                    ");
+      if(gMenu == menu_idle){
+        kNum = 0;
+        lcd.setCursor(0,1);
+        lcd.print("                    ");
+      }else if(gMenu == menu_rtc){
+      }
       break;
     case 'B':
       // backspace
       tmpNum1 = kNum / 10;
-      if(tmpNum1 >= 0){
-        kNum = tmpNum1;
-        lcd.setCursor(0,1);
-        lcd.print("                    ");
-        if(kNum == 0){
-        }else if(kNum<10){
-          lcd.setCursor(10,1);
-          lcd.print(kNum);
-        }else if(kNum<100){
-          lcd.setCursor(9,1);
-          lcd.print(kNum);
-        }else if(kNum<1000){
-          lcd.setCursor(8,1);
-          lcd.print(kNum);
-        }else if(kNum<10000){
-          lcd.setCursor(7,1);
-          lcd.print(kNum);
+      if(gMenu == menu_idle){
+        if(tmpNum1 >= 0){
+          kNum = tmpNum1;
+          lcd.setCursor(0,1);
+          lcd.print("                    ");
+          if(kNum == 0){
+          }else if(kNum<10){
+            lcd.setCursor(10,1);
+            lcd.print(kNum);
+          }else if(kNum<100){
+            lcd.setCursor(9,1);
+            lcd.print(kNum);
+          }else if(kNum<1000){
+            lcd.setCursor(8,1);
+            lcd.print(kNum);
+          }else if(kNum<10000){
+            lcd.setCursor(7,1);
+            lcd.print(kNum);
+          }
         }
+      }else if(gMenu == menu_rtc){
       }
       break;
     case 'C':
+      // rtc setup
+      if(gMenu == menu_idle){
+        lcd_initPage(menu_rtc);
+      }else if(gMenu == menu_rtc){
+        lcd_initPage(menu_idle);
+      }
       break;
     case 'D':
       // Check pass
-      if(kNum == gPassword){
-        lcd_initPage(menu_open);
-      }else{
-        lcd_initPage(menu_cannot_open);
+      if(gMenu == menu_idle){
+        if(kNum == gPassword){
+          lcd_initPage(menu_open);
+        }else{
+          lcd_initPage(menu_cannot_open);
+        }
+        kNum = 0;
+      }else if(gMenu == menu_rtc){
       }
-      kNum = 0;
       break;
     case '*':
       break;
@@ -456,20 +490,23 @@ void keypad_process(void){
     default:
       customKeyNum = customKey - '0';
       tmpNum1 = kNum * 10 + customKeyNum;
-      if(tmpNum1 < 10000){
-        kNum = tmpNum1;
-        lcd.setCursor(0,1);
-        lcd.print("                    ");
-        if(kNum<10){
-          lcd.setCursor(10,1);
-        }else if(kNum<100){
-          lcd.setCursor(9,1);
-        }else if(kNum<1000){
-          lcd.setCursor(8,1);
-        }else if(kNum<10000){
-          lcd.setCursor(7,1);
+      if(gMenu == menu_idle){
+        if(tmpNum1 < 10000){
+          kNum = tmpNum1;
+          lcd.setCursor(0,1);
+          lcd.print("                    ");
+          if(kNum<10){
+            lcd.setCursor(10,1);
+          }else if(kNum<100){
+            lcd.setCursor(9,1);
+          }else if(kNum<1000){
+            lcd.setCursor(8,1);
+          }else if(kNum<10000){
+            lcd.setCursor(7,1);
+          }
+          lcd.print(kNum);
         }
-        lcd.print(kNum);
+      }else if(gMenu == menu_rtc){
       }
       break;
     }
