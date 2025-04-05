@@ -52,6 +52,7 @@ typedef enum menu_tag{
   menu_cannot_open,
   menu_locking,
   menu_rtc,
+  menu_rtc_setting,
 }menu_t;
 menu_t gMenu = menu_idle;
 
@@ -65,6 +66,12 @@ LiquidCrystal_I2C lcd(0x27,  20, 4);
 TM1637Display disp7seg(11 /*DIO*/, 12 /*CLK*/);
 uint8_t data_7seg[] = {0xff, 0xff, 0xff, 0xff};
 void sevSeg_printClock(uint8_t h, uint8_t m);
+typedef struct time_tag {
+  uint8_t hour;
+  uint8_t min;
+}time_t;
+time_t gTime = {.hour = 11, .min = 57};
+time_t tmpTime = {.hour = 0, .min = 0};;
 
 uint32_t gPassword = 6831;
 
@@ -161,6 +168,9 @@ uint8_t sevSeg_buf[4] = {0};
 void sevSeg_printClock(uint8_t h, uint8_t m){
   // sevSeg_num = h * 100 + m;
   // disp7seg.showNumberDecEx(sevSeg_num, true, true);
+
+  gTime.hour = h;
+  gTime.min  = m;
 
   sevSeg_buf[0] = h/10;
   sevSeg_buf[1] = h%10;
@@ -356,6 +366,8 @@ void lcd_initPage(menu_t m){
   switch (m)
   {
   case menu_idle:
+    // lcd.blink_off();
+
     lcd.setCursor(0,0);
     lcd.print("                    ");
     lcd.setCursor(0,1);
@@ -414,13 +426,35 @@ void lcd_initPage(menu_t m){
     lcd.print("                    ");
     lcd.setCursor(0,2);
     lcd.print("                    ");
-    lcd.setCursor(5,0);
+    lcd.setCursor(6,0);
     lcd.print("Set time:");
+    lcd.setCursor(8,1);
+    tmpTime = gTime;
+    lcd.print(tmpTime.hour);lcd.print(":");lcd.print(tmpTime.min);
+    
+    // lcd.setCursor(9,1);
+    // lcd.blink_on();
+    break;
+  case menu_rtc_setting:
+    lcd_initPage_next_tick_to_idle = millis() + 2000;
+    lcd.setCursor(0,0);
+    lcd.print("                    ");
+    lcd.setCursor(0,1);
+    lcd.print("                    ");
+    lcd.setCursor(0,2);
+    lcd.print("                    ");
+    lcd.setCursor(1,1);
+    lcd.print("RTC set correctly.");
     break;
   default:
     break;
   }
 }
+typedef enum timeSetup_tag {
+  timeSetup_hour = 0,
+  timeSetup_min,
+}timeSetup_t;
+timeSetup_t timeSetupPos = timeSetup_hour;
 void keypad_process(void){
   static uint32_t kNum = 0;
   uint8_t customKeyNum = 0;
@@ -437,6 +471,21 @@ void keypad_process(void){
         lcd.setCursor(0,1);
         lcd.print("                    ");
       }else if(gMenu == menu_rtc){
+        if(timeSetupPos == timeSetup_hour){
+          kNum = 0;
+          tmpTime.hour = 0;
+          lcd.setCursor(8,1);
+          lcd.print("  ");
+          lcd.setCursor(8,1);
+          lcd.print(tmpTime.hour);
+        }else if(timeSetupPos == timeSetup_min){
+          kNum = 0;
+          tmpTime.min = 0;
+          lcd.setCursor(11,1);
+          lcd.print("  ");
+          lcd.setCursor(11,1);
+          lcd.print(tmpTime.min);
+        }
       }
       break;
     case 'B':
@@ -483,6 +532,9 @@ void keypad_process(void){
         }
         kNum = 0;
       }else if(gMenu == menu_rtc){
+        gTime = tmpTime;
+        sevSeg_printClock(gTime.hour, gTime.min);
+        lcd_initPage(menu_rtc_setting);
       }
       break;
     case '*':
@@ -509,6 +561,31 @@ void keypad_process(void){
           lcd.print(kNum);
         }
       }else if(gMenu == menu_rtc){
+        if(timeSetupPos == timeSetup_hour){
+          if(tmpNum1 < 25){
+            kNum = tmpNum1;
+            tmpTime.hour = kNum;
+            lcd.setCursor(8,1);
+            lcd.print("  ");
+            lcd.setCursor(8,1);
+            lcd.print(tmpTime.hour);
+          }else{
+            timeSetupPos = timeSetup_min;
+            kNum = 0;
+          }
+        }else if(timeSetupPos == timeSetup_min){
+          if(tmpNum1 < 61){
+            kNum = tmpNum1;
+            tmpTime.min = kNum;
+            lcd.setCursor(11,1);
+            lcd.print("  ");
+            lcd.setCursor(11,1);
+            lcd.print(tmpTime.min);
+          }else{
+            timeSetupPos = timeSetup_hour;
+            kNum = 0;
+          }
+        }
       }
       break;
     }
