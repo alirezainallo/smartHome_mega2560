@@ -9,7 +9,7 @@
 #include <SoftwareSerial.h>
 #include "DFRobotDFPlayerMini.h"
 
-SoftwareSerial softSerial(/*rx =*/20, /*tx =*/21);
+SoftwareSerial softSerial(/*rx =*/19, /*tx =*/18, true);
 DFRobotDFPlayerMini myDFPlayer;
 void printDetail(uint8_t type, int value);
 
@@ -64,22 +64,22 @@ void setup() {
   dht.begin();
   // MQ9
   pinMode(MQ9_PIN, INPUT_PULLUP);
-  // dfplayer
-  softSerial.begin(9600);
-  if (!myDFPlayer.begin(softSerial, /*isACK = */true, /*doReset = */true)) {  //Use serial to communicate with mp3.
-    Serial.println(F("Unable to begin:"));
-    Serial.println(F("1.Please recheck the connection!"));
-    Serial.println(F("2.Please insert the SD card!"));
-    while(true){
-      delay(0);
-    }
-  }
-  Serial.println(F("DFPlayer Mini online."));
-  myDFPlayer.volume(15);  //Set volume value. From 0 to 30
-  myDFPlayer.play(1);  //Play the first mp3
-  if (myDFPlayer.available()) {
-    printDetail(myDFPlayer.readType(), myDFPlayer.read()); //Print the detail message from DFPlayer to handle different errors and states.
-  }
+  // // dfplayer
+  // softSerial.begin(9600);
+  // if (!myDFPlayer.begin(softSerial, /*isACK = */true, /*doReset = */true)) {  //Use serial to communicate with mp3.
+  //   Serial.println(F("Unable to begin:"));
+  //   Serial.println(F("1.Please recheck the connection!"));
+  //   Serial.println(F("2.Please insert the SD card!"));
+  //   while(true){
+  //     delay(0);
+  //   }
+  // }
+  // Serial.println(F("DFPlayer Mini online."));
+  // myDFPlayer.volume(15);  //Set volume value. From 0 to 30
+  // myDFPlayer.play(1);  //Play the first mp3
+  // if (myDFPlayer.available()) {
+  //   printDetail(myDFPlayer.readType(), myDFPlayer.read()); //Print the detail message from DFPlayer to handle different errors and states.
+  // }
 }
 
 void loop() {
