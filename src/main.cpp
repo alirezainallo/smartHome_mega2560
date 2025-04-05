@@ -52,8 +52,8 @@ void setup() {
   lcd.init();
   lcd.backlight();
   lcd.clear();
-  lcd.setCursor(0,0);
-  lcd.print("Hello dear");
+  lcd.setCursor(4,1);
+  lcd.print("Starting...");
   delay(2000);
   lcd.clear();
   // 7seg
