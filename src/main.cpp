@@ -23,7 +23,7 @@ DHT_Unified dht(DHTPIN, DHTTYPE);
 
 const byte ROWS = 4; 
 const byte COLS = 4; 
-
+void keypad_process(void);
 char hexaKeys[ROWS][COLS] = {
   {'1', '2', '3', 'A'},
   {'4', '5', '6', 'B'},
@@ -36,6 +36,7 @@ Keypad customKeypad = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS)
 
 #define bilink_pin 13 //PB7
 void blink_loop(uint32_t ms);
+void lcd_loop(uint32_t ms);
 LiquidCrystal_I2C lcd(0x27,  20, 4);
 TM1637Display disp7seg(11 /*DIO*/, 12 /*CLK*/);
 uint8_t data_7seg[] = {0xff, 0xff, 0xff, 0xff};
@@ -85,11 +86,9 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   blink_loop(500);
+  lcd_loop(5000);
 
-  char customKey = customKeypad.getKey();
-  if (customKey){
-    Serial.println(customKey);
-  }
+  keypad_process();
 }
 
 // put function definitions here:
@@ -193,7 +192,126 @@ void blink_loop(uint32_t ms){
     }
   }
 }
+void lcd_loop(uint32_t ms){
+  static uint32_t currTick = 0;
+  static uint32_t nextTick = 0;
+  static bool currStat = false;
+  currTick = millis();
+  if(nextTick < currTick){
+    nextTick = currTick + ms;
+    
+    lcd.setCursor(0,3);
+    lcd.print("                    ");
+    
+    // dht11
+    bool dht_debug_sw = false;
+    sensors_event_t event;
+    dht.temperature().getEvent(&event);
+    if (isnan(event.temperature)) {
+      if(dht_debug_sw) Serial.println(F("Error reading temperature!"));
+    }
+    else {
+      if(dht_debug_sw) Serial.print(F("Temperature: "));
+      if(dht_debug_sw) Serial.print(event.temperature);
+      if(dht_debug_sw) Serial.println(F("°C"));
 
+      lcd.setCursor(0,3);
+      lcd.print(event.temperature);
+      lcd.print(((char)178));
+      lcd.print("C");
+    }
+    // Get humidity event and print its value.
+    dht.humidity().getEvent(&event);
+    if (isnan(event.relative_humidity)) {
+      if(dht_debug_sw) Serial.println(F("Error reading humidity!"));
+    }
+    else {
+      if(dht_debug_sw) Serial.print(F("Humidity: "));
+      if(dht_debug_sw) Serial.print(event.relative_humidity);
+      if(dht_debug_sw) Serial.println(F("%"));
+
+      lcd.setCursor(14,3);
+      lcd.print(event.relative_humidity);
+      lcd.print(F("%"));
+    }
+  }
+}
+
+typedef enum menu_tag{
+  menu_idle = 0,
+  menu_open,
+  menu_locking,
+}menu_t;
+menu_t gMenu = menu_idle;
+void keypad_process(void){
+  static uint32_t kNum = 0;
+  uint8_t customKeyNum = 0;
+  uint32_t tmpNum1 = 0;
+  uint32_t tmpNum2 = 0;
+  char customKey = customKeypad.getKey();
+  if (customKey){
+    switch (customKey)
+    {
+    case 'A':
+      // clear
+      kNum = 0;
+      lcd.setCursor(0,1);
+      lcd.print("                    ");
+      break;
+    case 'B':
+      // backspace
+      tmpNum1 = kNum / 10;
+      if(tmpNum1 >= 0){
+        kNum = tmpNum1;
+        lcd.setCursor(0,1);
+        lcd.print("                    ");
+        if(kNum == 0){
+        }else if(kNum<10){
+          lcd.setCursor(10,1);
+          lcd.print(kNum);
+        }else if(kNum<100){
+          lcd.setCursor(9,1);
+          lcd.print(kNum);
+        }else if(kNum<1000){
+          lcd.setCursor(8,1);
+          lcd.print(kNum);
+        }else if(kNum<10000){
+          lcd.setCursor(7,1);
+          lcd.print(kNum);
+        }
+      }
+      break;
+    case 'C':
+      break;
+    case 'D':
+      // Check pass
+      break;
+    case '*':
+      break;
+    case '#':
+      break;
+    default:
+      customKeyNum = customKey - '0';
+      tmpNum1 = kNum * 10 + customKeyNum;
+      if(tmpNum1 < 10000){
+        kNum = tmpNum1;
+        lcd.setCursor(0,1);
+        lcd.print("                    ");
+        if(kNum<10){
+          lcd.setCursor(10,1);
+        }else if(kNum<100){
+          lcd.setCursor(9,1);
+        }else if(kNum<1000){
+          lcd.setCursor(8,1);
+        }else if(kNum<10000){
+          lcd.setCursor(7,1);
+        }
+        lcd.print(kNum);
+      }
+      break;
+    }
+  }
+}
 void printDetail(uint8_t type, int value){
   switch (type) {
     case TimeOut:
