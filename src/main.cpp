@@ -16,7 +16,7 @@
 #define WATER_POMP_FIRE_PIN 51
 #define WATER_POMP_SOIL_PIN 49
 #define LIGHT_PIN           47
-
+bool needFan = false;
 
 Servo doorServo;
 
@@ -190,6 +190,8 @@ void blink_loop(uint32_t ms){
     digitalWrite(bilink_pin, currStat);
     currStat = !currStat;
     
+    needFan = false;
+    
     // MQ9
     static bool mq9_preState = false;
     bool mq9_curState = digitalRead(MQ9_PIN);
@@ -197,10 +199,11 @@ void blink_loop(uint32_t ms){
       mq9_preState = mq9_curState;
       if(mq9_curState){
         Serial.println("MQ9 Detected!!!");
-        digitalWrite(FAN_PIN, HIGH);
+        // digitalWrite(FAN_PIN, HIGH);
+        needFan = true;
       }else{
         Serial.println("MQ9 Solved");
-        digitalWrite(FAN_PIN, LOW);
+        // digitalWrite(FAN_PIN, LOW);
       }
     }
     
@@ -267,9 +270,10 @@ void blink_loop(uint32_t ms){
       if(dht_debug_sw) Serial.println(F("°C"));
 
       if(event.temperature > 28){
-        digitalWrite(FAN_PIN, HIGH);
+        // digitalWrite(FAN_PIN, HIGH);
+        needFan = true;
       }else{
-        digitalWrite(FAN_PIN, LOW);
+        // digitalWrite(FAN_PIN, LOW);
       }
     }
     // Get humidity event and print its value.
@@ -281,6 +285,14 @@ void blink_loop(uint32_t ms){
       if(dht_debug_sw) Serial.print(F("Humidity: "));
       if(dht_debug_sw) Serial.print(event.relative_humidity);
       if(dht_debug_sw) Serial.println(F("%"));
+    }
+
+
+    // fan control
+    if(needFan){
+      digitalWrite(FAN_PIN, HIGH);
+    }else{
+      digitalWrite(FAN_PIN, LOW);
     }
   }
 }
