@@ -101,25 +101,26 @@ void setup() {
 
   // Servo
   doorServo.attach(A0);
-  delay(100);
   doorServo.write(0);
-  delay(100);
-  doorServo.write(45);
-  delay(100);
-  doorServo.write(90);
-  delay(100);
-  doorServo.write(135);
-  delay(100);
-  doorServo.write(180);
-  delay(100);
-  doorServo.write(135);
-  delay(100);
-  doorServo.write(90);
-  delay(100);
-  doorServo.write(45);
-  delay(100);
-  doorServo.write(0);
-  delay(100);
+  // delay(100);
+  // doorServo.write(0);
+  // delay(100);
+  // doorServo.write(45);
+  // delay(100);
+  // doorServo.write(90);
+  // delay(100);
+  // doorServo.write(135);
+  // delay(100);
+  // doorServo.write(180);
+  // delay(100);
+  // doorServo.write(135);
+  // delay(100);
+  // doorServo.write(90);
+  // delay(100);
+  // doorServo.write(45);
+  // delay(100);
+  // doorServo.write(0);
+  // delay(100);
 }
 
 void loop() {
@@ -299,6 +300,7 @@ void lcd_initPage(menu_t m){
 
     lcd.setCursor(2,0);
     lcd.print("Enter your pass");
+    doorServo.write(0);
     break;
   case menu_open:
     lcd_initPage_next_tick_to_idle = millis() + 2000;
@@ -309,6 +311,7 @@ void lcd_initPage(menu_t m){
     lcd.print("                    ");
     lcd.setCursor(2,1);
     lcd.print("pass was correct");
+    doorServo.write(90);
     break;
   case menu_cannot_open:
     lcd_initPage_next_tick_to_idle = millis() + 2000;
