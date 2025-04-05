@@ -10,6 +10,14 @@
 #include "DFRobotDFPlayerMini.h"
 #include <Servo.h>
 
+#define FIRE_SENSOR_PIN     45
+
+#define FAN_PIN             53
+#define WATER_POMP_FIRE_PIN 51
+#define WATER_POMP_SOIL_PIN 49
+#define LIGHT_PIN           47
+
+
 Servo doorServo;
 
 SoftwareSerial softSerial(/*rx =*/19, /*tx =*/18, true);
@@ -99,6 +107,24 @@ void setup() {
   //   printDetail(myDFPlayer.readType(), myDFPlayer.read()); //Print the detail message from DFPlayer to handle different errors and states.
   // }
 
+  // pins
+  pinMode(FIRE_SENSOR_PIN, INPUT_PULLUP);
+
+  pinMode(FAN_PIN, OUTPUT);
+  pinMode(WATER_POMP_FIRE_PIN, OUTPUT);
+  pinMode(WATER_POMP_SOIL_PIN, OUTPUT);
+  pinMode(LIGHT_PIN, OUTPUT);
+
+  digitalWrite(FAN_PIN, LOW);
+  digitalWrite(WATER_POMP_FIRE_PIN, LOW);
+  digitalWrite(WATER_POMP_SOIL_PIN, LOW);
+  digitalWrite(LIGHT_PIN, LOW);
+  
+  // digitalWrite(FAN_PIN, HIGH);
+  // digitalWrite(WATER_POMP_FIRE_PIN, HIGH);
+  // digitalWrite(WATER_POMP_SOIL_PIN, HIGH);
+  // digitalWrite(LIGHT_PIN, HIGH);
+
   // Servo
   doorServo.attach(A0);
   doorServo.write(0);
@@ -171,8 +197,24 @@ void blink_loop(uint32_t ms){
       mq9_preState = mq9_curState;
       if(mq9_curState){
         Serial.println("MQ9 Detected!!!");
+        digitalWrite(FAN_PIN, HIGH);
       }else{
         Serial.println("MQ9 Solved");
+        digitalWrite(FAN_PIN, LOW);
+      }
+    }
+    
+    // fire
+    static bool fire_preState = false;
+    bool fire_curState = digitalRead(FIRE_SENSOR_PIN);
+    if(fire_curState != fire_preState){
+      fire_preState = fire_curState;
+      if(fire_curState){
+        Serial.println("Fire Detected!!!");
+        digitalWrite(WATER_POMP_FIRE_PIN, HIGH);
+      }else{
+        Serial.println("Fire Solved");
+        digitalWrite(WATER_POMP_FIRE_PIN, LOW);
       }
     }
     
@@ -183,8 +225,10 @@ void blink_loop(uint32_t ms){
       ldr_preState = ldr_curState;
       if(ldr_curState){
         Serial.println("Light Low");
+        digitalWrite(LIGHT_PIN, HIGH);
       }else{
         Serial.println("Light Ok");
+        digitalWrite(LIGHT_PIN, LOW);
       }
     }
 
@@ -195,8 +239,10 @@ void blink_loop(uint32_t ms){
       shm_preState = shm_curState;
       if(shm_curState){
         Serial.println("Soil Humadity Low");
+        digitalWrite(WATER_POMP_SOIL_PIN, HIGH);
       }else{
         Serial.println("Soil Humadity High");
+        digitalWrite(WATER_POMP_SOIL_PIN, LOW);
       }
     }
 
@@ -219,6 +265,12 @@ void blink_loop(uint32_t ms){
       if(dht_debug_sw) Serial.print(F("Temperature: "));
       if(dht_debug_sw) Serial.print(event.temperature);
       if(dht_debug_sw) Serial.println(F("°C"));
+
+      if(event.temperature > 28){
+        digitalWrite(FAN_PIN, HIGH);
+      }else{
+        digitalWrite(FAN_PIN, LOW);
+      }
     }
     // Get humidity event and print its value.
     dht.humidity().getEvent(&event);
