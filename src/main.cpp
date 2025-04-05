@@ -8,6 +8,9 @@
 #include <DHT_U.h>
 #include <SoftwareSerial.h>
 #include "DFRobotDFPlayerMini.h"
+#include <Servo.h>
+
+Servo doorServo;
 
 SoftwareSerial softSerial(/*rx =*/19, /*tx =*/18, true);
 DFRobotDFPlayerMini myDFPlayer;
@@ -95,6 +98,28 @@ void setup() {
   // if (myDFPlayer.available()) {
   //   printDetail(myDFPlayer.readType(), myDFPlayer.read()); //Print the detail message from DFPlayer to handle different errors and states.
   // }
+
+  // Servo
+  doorServo.attach(A0);
+  delay(100);
+  doorServo.write(0);
+  delay(100);
+  doorServo.write(45);
+  delay(100);
+  doorServo.write(90);
+  delay(100);
+  doorServo.write(135);
+  delay(100);
+  doorServo.write(180);
+  delay(100);
+  doorServo.write(135);
+  delay(100);
+  doorServo.write(90);
+  delay(100);
+  doorServo.write(45);
+  delay(100);
+  doorServo.write(0);
+  delay(100);
 }
 
 void loop() {
