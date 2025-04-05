@@ -41,8 +41,9 @@ typedef enum menu_tag{
   menu_locking,
 }menu_t;
 menu_t gMenu = menu_idle;
-menu_t gPreMenu = menu_idle;
 
+uint32_t lcd_initPage_next_tick_to_idle = 0;
+bool idleOrLocking = false;
 #define bilink_pin 13 //PB7
 void blink_loop(uint32_t ms);
 void lcd_loop(uint32_t ms);
@@ -248,10 +249,20 @@ void lcd_loop(uint32_t ms){
       lcd.print(F("%"));
     }
   }
+
+  if(lcd_initPage_next_tick_to_idle != 0){
+    if(lcd_initPage_next_tick_to_idle < currTick){
+      lcd_initPage_next_tick_to_idle = 0;
+      if(idleOrLocking){
+        lcd_initPage(menu_locking);
+      }else{
+        lcd_initPage(menu_idle);
+      }
+    }
+  }
 }
 
 void lcd_initPage(menu_t m){
-  gPreMenu = gMenu;
   gMenu = m;
   switch (m)
   {
@@ -265,6 +276,8 @@ void lcd_initPage(menu_t m){
     lcd.print("Enter your pass");
     break;
   case menu_open:
+    lcd_initPage_next_tick_to_idle = millis() + 2000;
+    idleOrLocking = true;
     lcd.setCursor(0,0);
     lcd.print("                    ");
     lcd.setCursor(0,1);
@@ -273,6 +286,7 @@ void lcd_initPage(menu_t m){
     lcd.print("pass was correct");
     break;
   case menu_cannot_open:
+    lcd_initPage_next_tick_to_idle = millis() + 2000;
     lcd.setCursor(0,0);
     lcd.print("                    ");
     lcd.setCursor(0,1);
@@ -281,6 +295,8 @@ void lcd_initPage(menu_t m){
     lcd.print("pass was incorrect");
     break;
   case menu_locking:
+    lcd_initPage_next_tick_to_idle = millis() + 2000;
+    idleOrLocking = false;
     lcd.setCursor(0,0);
     lcd.print("                    ");
     lcd.setCursor(0,1);
