@@ -16,6 +16,7 @@
 #define WATER_POMP_FIRE_PIN 51
 #define WATER_POMP_SOIL_PIN 49
 #define LIGHT_PIN           47
+#define LOCK_PIN            43
 bool needFan = false;
 
 Servo doorServo;
@@ -115,16 +116,13 @@ void setup() {
   pinMode(WATER_POMP_FIRE_PIN, OUTPUT);
   pinMode(WATER_POMP_SOIL_PIN, OUTPUT);
   pinMode(LIGHT_PIN, OUTPUT);
+  pinMode(LOCK_PIN, OUTPUT);
 
   digitalWrite(FAN_PIN, LOW);
   digitalWrite(WATER_POMP_FIRE_PIN, LOW);
   digitalWrite(WATER_POMP_SOIL_PIN, LOW);
   digitalWrite(LIGHT_PIN, LOW);
-  
-  // digitalWrite(FAN_PIN, HIGH);
-  // digitalWrite(WATER_POMP_FIRE_PIN, HIGH);
-  // digitalWrite(WATER_POMP_SOIL_PIN, HIGH);
-  // digitalWrite(LIGHT_PIN, HIGH);
+  digitalWrite(LOCK_PIN, LOW);
 
   // Servo
   doorServo.attach(A0);
@@ -380,6 +378,8 @@ void lcd_initPage(menu_t m){
     lcd.print("                    ");
     lcd.setCursor(2,1);
     lcd.print("pass was correct");
+    digitalWrite(LOCK_PIN, HIGH);
+    delay(300);
     doorServo.write(90);
     break;
   case menu_cannot_open:
@@ -404,6 +404,8 @@ void lcd_initPage(menu_t m){
     lcd.print("                    ");
     lcd.setCursor(5,1);
     lcd.print("Locking...");
+    digitalWrite(LOCK_PIN, LOW);
+    delay(200);
     break;
   case menu_rtc:
     lcd.setCursor(0,0);
