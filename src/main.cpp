@@ -34,13 +34,25 @@ byte rowPins[ROWS] = {9, 8, 7, 6};
 byte colPins[COLS] = {5, 4, 3, 2};
 Keypad customKeypad = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
 
+typedef enum menu_tag{
+  menu_idle = 0,
+  menu_open,
+  menu_cannot_open,
+  menu_locking,
+}menu_t;
+menu_t gMenu = menu_idle;
+menu_t gPreMenu = menu_idle;
+
 #define bilink_pin 13 //PB7
 void blink_loop(uint32_t ms);
 void lcd_loop(uint32_t ms);
+void lcd_initPage(menu_t m);
 LiquidCrystal_I2C lcd(0x27,  20, 4);
 TM1637Display disp7seg(11 /*DIO*/, 12 /*CLK*/);
 uint8_t data_7seg[] = {0xff, 0xff, 0xff, 0xff};
 void sevSeg_printClock(uint8_t h, uint8_t m);
+
+uint32_t gPassword = 6831;
 
 void setup() {
   // put your setup code here, to run once:
@@ -57,6 +69,7 @@ void setup() {
   lcd.print("Starting...");
   delay(2000);
   lcd.clear();
+  lcd_initPage(menu_idle);
   // 7seg
   disp7seg.setBrightness(7,true);
   // disp7seg.showNumberDecEx(1234);
@@ -237,12 +250,48 @@ void lcd_loop(uint32_t ms){
   }
 }
 
-typedef enum menu_tag{
-  menu_idle = 0,
-  menu_open,
-  menu_locking,
-}menu_t;
-menu_t gMenu = menu_idle;
+void lcd_initPage(menu_t m){
+  gPreMenu = gMenu;
+  gMenu = m;
+  switch (m)
+  {
+  case menu_idle:
+    lcd.setCursor(0,0);
+    lcd.print("                    ");
+    lcd.setCursor(0,1);
+    lcd.print("                    ");
+
+    lcd.setCursor(2,0);
+    lcd.print("Enter your pass");
+    break;
+  case menu_open:
+    lcd.setCursor(0,0);
+    lcd.print("                    ");
+    lcd.setCursor(0,1);
+    lcd.print("                    ");
+    lcd.setCursor(2,1);
+    lcd.print("pass was correct");
+    break;
+  case menu_cannot_open:
+    lcd.setCursor(0,0);
+    lcd.print("                    ");
+    lcd.setCursor(0,1);
+    lcd.print("                    ");
+    lcd.setCursor(1,1);
+    lcd.print("pass was incorrect");
+    break;
+  case menu_locking:
+    lcd.setCursor(0,0);
+    lcd.print("                    ");
+    lcd.setCursor(0,1);
+    lcd.print("                    ");
+    lcd.setCursor(5,1);
+    lcd.print("Locking...");
+    break;
+  default:
+    break;
+  }
+}
 void keypad_process(void){
   static uint32_t kNum = 0;
   uint8_t customKeyNum = 0;
@@ -285,6 +334,12 @@ void keypad_process(void){
       break;
     case 'D':
       // Check pass
+      if(kNum == gPassword){
+        lcd_initPage(menu_open);
+      }else{
+        lcd_initPage(menu_cannot_open);
+      }
+      kNum = 0;
       break;
     case '*':
       break;
