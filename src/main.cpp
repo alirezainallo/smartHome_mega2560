@@ -9,6 +9,9 @@
 #include <SoftwareSerial.h>
 #include "DFRobotDFPlayerMini.h"
 #include <Servo.h>
+#include "RTClib.h"
+
+RTC_DS1307 rtc;
 
 #define FIRE_SENSOR_PIN     45
 
@@ -62,6 +65,7 @@ bool idleOrLocking = false;
 void blink_loop(uint32_t ms);
 void lcd_loop(uint32_t ms);
 void lcd_initPage(menu_t m);
+void rtc_loop(void);
 LiquidCrystal_I2C lcd(0x27,  20, 4);
 TM1637Display disp7seg(11 /*DIO*/, 12 /*CLK*/);
 uint8_t data_7seg[] = {0xff, 0xff, 0xff, 0xff};
@@ -91,10 +95,21 @@ void setup() {
   delay(2000);
   lcd.clear();
   lcd_initPage(menu_idle);
+  // rtc
+  if(!rtc.begin()){
+    Serial.println("Couldn't find RTC");
+  }
   // 7seg
   disp7seg.setBrightness(7,true);
   // disp7seg.showNumberDecEx(1234);
-  sevSeg_printClock(11, 57);
+  if(rtc.isrunning()){
+    DateTime rtcData = rtc.now();
+    sevSeg_printClock(rtcData.hour(), rtcData.minute());
+  }else{
+    DateTime rtcData(__DATE__, __TIME__);
+    rtc.adjust(rtcData);
+    sevSeg_printClock(rtcData.hour(), rtcData.minute());
+  }
   // DHT
   dht.begin();
   // MQ9
@@ -153,13 +168,14 @@ void setup() {
   // delay(100);
   // doorServo.write(0);
   // delay(100);
+
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
   blink_loop(500);
   lcd_loop(5000);
-
+  rtc_loop();
   keypad_process();
 }
 
@@ -168,7 +184,7 @@ uint8_t sevSeg_buf[4] = {0};
 void sevSeg_printClock(uint8_t h, uint8_t m){
   // sevSeg_num = h * 100 + m;
   // disp7seg.showNumberDecEx(sevSeg_num, true, true);
-
+  
   gTime.hour = h;
   gTime.min  = m;
 
@@ -186,6 +202,18 @@ void sevSeg_printClock(uint8_t h, uint8_t m){
     }
   }
   disp7seg.setSegments(sevSeg_buf, 4, 0);
+}
+void rtc_loop(void){
+  static uint32_t currTick = 0;
+  static uint32_t nextTick = 0;
+  static bool currStat = false;
+  currTick = millis();
+  if(nextTick < currTick){
+    nextTick = currTick + 500;
+
+    DateTime rtcData = rtc.now();
+    sevSeg_printClock(rtcData.hour(), rtcData.minute());
+  }
 }
 void blink_loop(uint32_t ms){
   static uint32_t currTick = 0;
@@ -533,6 +561,8 @@ void keypad_process(void){
         kNum = 0;
       }else if(gMenu == menu_rtc){
         gTime = tmpTime;
+        DateTime rtcData(2025, 4, 6, gTime.hour, gTime.min, 0);
+        rtc.adjust(rtcData);
         sevSeg_printClock(gTime.hour, gTime.min);
         lcd_initPage(menu_rtc_setting);
       }
