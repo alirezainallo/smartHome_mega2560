@@ -206,7 +206,6 @@ void sevSeg_printClock(uint8_t h, uint8_t m){
 void rtc_loop(void){
   static uint32_t currTick = 0;
   static uint32_t nextTick = 0;
-  static bool currStat = false;
   currTick = millis();
   if(nextTick < currTick){
     nextTick = currTick + 500;
