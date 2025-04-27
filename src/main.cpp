@@ -213,11 +213,14 @@ void rtc_loop(void){
 
     // DateTime rtcData = rtc.now();
     // sevSeg_printClock(rtcData.hour(), rtcData.minute());
-
-    if(gTime.min++ >= 60){
-      gTime.min = 0;
-      if(gTime.hour++ >= 24){
-        gTime.hour = 0;
+    static bool tmp = false;
+    tmp = !tmp;
+    if(tmp){
+      if(gTime.min++ >= 60){
+        gTime.min = 0;
+        if(gTime.hour++ >= 24){
+          gTime.hour = 0;
+        }
       }
     }
     sevSeg_printClock(gTime.hour, gTime.min);
