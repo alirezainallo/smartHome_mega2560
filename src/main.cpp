@@ -102,14 +102,15 @@ void setup() {
   // 7seg
   disp7seg.setBrightness(7,true);
   // disp7seg.showNumberDecEx(1234);
-  if(rtc.isrunning()){
-    DateTime rtcData = rtc.now();
-    sevSeg_printClock(rtcData.hour(), rtcData.minute());
-  }else{
-    DateTime rtcData(__DATE__, __TIME__);
-    rtc.adjust(rtcData);
-    sevSeg_printClock(rtcData.hour(), rtcData.minute());
-  }
+  // if(rtc.isrunning()){
+  //   DateTime rtcData = rtc.now();
+  //   sevSeg_printClock(rtcData.hour(), rtcData.minute());
+  // }else{
+  //   DateTime rtcData(__DATE__, __TIME__);
+  //   rtc.adjust(rtcData);
+  //   sevSeg_printClock(rtcData.hour(), rtcData.minute());
+  // }
+  sevSeg_printClock(gTime.hour, gTime.min);
   // DHT
   dht.begin();
   // MQ9
@@ -210,8 +211,16 @@ void rtc_loop(void){
   if(nextTick < currTick){
     nextTick = currTick + 500;
 
-    DateTime rtcData = rtc.now();
-    sevSeg_printClock(rtcData.hour(), rtcData.minute());
+    // DateTime rtcData = rtc.now();
+    // sevSeg_printClock(rtcData.hour(), rtcData.minute());
+
+    if(gTime.min++ >= 60){
+      gTime.min = 0;
+      if(gTime.hour++ >= 24){
+        gTime.hour = 0;
+      }
+    }
+    sevSeg_printClock(gTime.hour, gTime.min);
   }
 }
 void blink_loop(uint32_t ms){
@@ -560,8 +569,8 @@ void keypad_process(void){
         kNum = 0;
       }else if(gMenu == menu_rtc){
         gTime = tmpTime;
-        DateTime rtcData(2025, 4, 6, gTime.hour, gTime.min, 0);
-        rtc.adjust(rtcData);
+        // DateTime rtcData(2025, 4, 6, gTime.hour, gTime.min, 0);
+        // rtc.adjust(rtcData);
         sevSeg_printClock(gTime.hour, gTime.min);
         lcd_initPage(menu_rtc_setting);
       }
