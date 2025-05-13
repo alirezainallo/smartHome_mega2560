@@ -17,9 +17,9 @@ RTC_DS1307 rtc;
 
 #define FAN_PIN             53
 #define WATER_POMP_FIRE_PIN 51
-#define WATER_POMP_SOIL_PIN 49
+#define WATER_POMP_SOIL_PIN 43
 #define LIGHT_PIN           47
-#define LOCK_PIN            43
+#define LOCK_PIN            49
 bool needFan = false;
 
 Servo doorServo;
@@ -68,6 +68,7 @@ void lcd_initPage(menu_t m);
 void rtc_loop(void);
 LiquidCrystal_I2C lcd(0x27,  20, 4);
 TM1637Display disp7seg(11 /*DIO*/, 12 /*CLK*/);
+// TM1637Display disp7seg(12 /*DIO*/, 11 /*CLK*/);
 uint8_t data_7seg[] = {0xff, 0xff, 0xff, 0xff};
 void sevSeg_printClock(uint8_t h, uint8_t m);
 typedef struct time_tag {
@@ -101,7 +102,9 @@ void setup() {
   }
   // 7seg
   disp7seg.setBrightness(7,true);
-  // disp7seg.showNumberDecEx(1234);
+  disp7seg.clear();
+  disp7seg.showNumberDecEx(1234);
+  delay(2000);
   if(rtc.isrunning()){
     DateTime rtcData = rtc.now();
     sevSeg_printClock(rtcData.hour(), rtcData.minute());
@@ -213,6 +216,13 @@ void rtc_loop(void){
 
     DateTime rtcData = rtc.now();
     sevSeg_printClock(rtcData.hour(), rtcData.minute());
+    currStat = !currStat;
+    if(currStat){
+      // Serial.printf("%02d:%02d\n", rtcData.hour(), rtcData.minute());
+      Serial.print(rtcData.hour());
+      Serial.print(":");
+      Serial.println(rtcData.minute());
+    }
   }
 }
 void blink_loop(uint32_t ms){
